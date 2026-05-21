@@ -98,11 +98,16 @@ function findIdx(r) {
 
 // ── Data Loading ────────────────────────────────
 async function loadData() {
-  try {
-    const res = await fetch('Data.json');
-    if (!res.ok) throw new Error('fetch failed');
-    initApp(await res.json()); return;
-  } catch (_) {}
+  // Try multiple filenames to support different hosting setups
+  const candidates = ['Data.json', 'Data', 'data.json', 'Full_Fom_2020_2024.json'];
+  for (const name of candidates) {
+    try {
+      const res = await fetch(name);
+      if (!res.ok) continue;
+      const text = await res.text();
+      initApp(JSON.parse(text)); return;
+    } catch (_) { continue; }
+  }
   showFilePicker();
 }
 
