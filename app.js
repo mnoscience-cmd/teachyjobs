@@ -98,45 +98,26 @@ function findIdx(r) {
 
 // ── Data Loading ────────────────────────────────
 async function loadData() {
-  // Try multiple filenames — check Content-Type to avoid HTML 404 pages that return 200
-  // Detect GitHub Pages and try raw GitHub URL automatically
-  const host = window.location.hostname;
-  const path = window.location.pathname.replace(/\/[^/]*$/, '/'); // folder path
-  const extraCandidates = [];
-  if (host.endsWith('github.io')) {
-    // Derive raw GitHub URL from GitHub Pages URL
-    // e.g. username.github.io/repo → raw.githubusercontent.com/username/repo/main/Data.json
-    const parts = host.split('.');
-    const username = parts[0];
-    const repo = path.split('/').filter(Boolean)[0] || '';
-    if (repo) {
-      extraCandidates.push(`https://raw.githubusercontent.com/${username}/${repo}/main/Data.json`);
-      extraCandidates.push(`https://raw.githubusercontent.com/${username}/${repo}/main/Data`);
-      extraCandidates.push(`https://raw.githubusercontent.com/${username}/${repo}/master/Data.json`);
-      extraCandidates.push(`https://raw.githubusercontent.com/${username}/${repo}/master/Data`);
-    }
-  }
-  const candidates = [...extraCandidates, 'Data.json', 'Data', 'data.json', 'Full_Fom_2020_2024.json'];
-  for (const name of candidates) {
+  const candidates = [
+    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/main/Data.json',
+    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/main/Data',
+    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/master/Data.json',
+    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/master/Data',
+    'Data.json',
+    'Data',
+  ];
+  for (const url of candidates) {
     try {
-      const res = await fetch(name);
+      const res = await fetch(url);
       if (!res.ok) continue;
-      // GitHub Pages may return HTML 404 with 200 status — reject non-JSON responses
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('json') && !ct.includes('octet-stream') && !ct.includes('text/plain')) {
-        // Try to read anyway — raw GitHub repos serve as text/plain
-        const text = await res.text();
-        if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) continue;
-        const parsed = JSON.parse(text);
-        const raw = Array.isArray(parsed) ? parsed : (parsed.records || parsed);
-        if (!raw || !raw.length) continue;
-        initApp(raw, parsed); return;
-      }
-      const parsed = await res.json();
+      const text = await res.text();
+      if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) continue;
+      const parsed = JSON.parse(text);
       const raw = Array.isArray(parsed) ? parsed : (parsed.records || parsed);
       if (!raw || !raw.length) continue;
+      console.log('Loaded from:', url);
       initApp(raw, parsed); return;
-    } catch (_) { continue; }
+    } catch (e) { console.warn('Failed:', url, e.message); continue; }
   }
   showFilePicker();
 }
