@@ -104,8 +104,10 @@ async function loadData() {
     try {
       const res = await fetch(name);
       if (!res.ok) continue;
-      const text = await res.text();
-      initApp(JSON.parse(text)); return;
+      const parsed = await res.json();
+      // Support both formats: plain array OR {records:[], total, unique, years, period}
+      const raw = Array.isArray(parsed) ? parsed : (parsed.records || parsed);
+      initApp(raw, parsed); return;
     } catch (_) { continue; }
   }
   showFilePicker();
@@ -126,17 +128,22 @@ function showFilePicker() {
   document.getElementById('jsonFileInput').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
     document.getElementById('loadingOverlay').innerHTML = `<div class="loading-card"><div class="spinner"></div><p class="loading-text">Loading…</p></div>`;
-    try { initApp(JSON.parse(await file.text())); }
+    try {
+      const parsed = JSON.parse(await file.text());
+      const raw = Array.isArray(parsed) ? parsed : (parsed.records || parsed);
+      initApp(raw, parsed);
+    }
     catch (_) { document.querySelector('.loading-text').textContent = '⚠️ Invalid JSON. Please select the correct Data.json.'; }
   });
 }
 
-function initApp(raw) {
+function initApp(raw, meta) {
   STATE.data = raw;
+  STATE.meta = meta || {};
   STATE.filtered = [...raw];
   STATE.duplicates = raw.filter(r => r.Duplicate);
   loadBookmarks();
-  populateFilters();
+  populateFilters(meta);
   switchTab('browse', false);
   renderJobs();
   buildCharts();
@@ -146,7 +153,7 @@ function initApp(raw) {
 }
 
 // ── Populate Filters ─────────────────────────────
-function populateFilters() {
+function populateFilters(meta) {
   const areas = [...new Set(STATE.data.map(r => r.Area).filter(a => a && a !== '(Unknown)'))].sort();
   const areaEl = document.getElementById('filterArea');
   areas.forEach(a => { const o = document.createElement('option'); o.value = o.textContent = a; areaEl.appendChild(o); });
@@ -161,15 +168,23 @@ function populateFilters() {
   while (yearEl.options.length > 1) yearEl.remove(1);
   years.forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; yearEl.appendChild(o); });
 
-  // Hero badge
-  if (years.length) {
+  // Hero badge — use meta.period if available, else derive from data
+  const badge = document.getElementById('heroBadge');
+  if (meta && meta.period) {
+    // Extract years from period string "2020-01-01 to 2026-05-21"
+    const parts = meta.period.match(/\d{4}/g);
+    const from = parts ? parts[0] : years[0];
+    const to   = parts ? parts[parts.length-1] : years[years.length-1];
+    badge.textContent = `📋 School Vacancies · ${from} – ${to}`;
+  } else if (years.length) {
     const range = years.length > 1 ? `${years[0]} – ${years[years.length-1]}` : years[0];
-    document.getElementById('heroBadge').textContent = `📋 School Vacancies · ${range}`;
+    badge.textContent = `📋 School Vacancies · ${range}`;
   }
 
-  // Update hero stat counts dynamically
+  // Update hero stat counts — prefer meta totals if available
   const counters = document.querySelectorAll('.stat-num[data-count]');
-  [STATE.data.length, areas.length, subjects.size, years.length].forEach((v, i) => {
+  const totalCount = (meta && meta.total) ? meta.total : STATE.data.length;
+  [totalCount, areas.length, subjects.size, years.length].forEach((v, i) => {
     if (counters[i]) counters[i].dataset.count = v;
   });
 }
@@ -584,8 +599,11 @@ function buildCharts() {
   };
   const noLeg = {...base, plugins:{...base.plugins, legend:{display:false}}};
 
-  // Year bar
-  const yrData = {'2020':2343,'2021':5086,'2022':5530,'2023':3588,'2024':3057};
+  // Year bar — use live data from meta or count from records
+  const yrRaw = (STATE.meta && STATE.meta.years) ? STATE.meta.years : 
+    STATE.data.reduce((acc,r)=>{ const y=String(r.Year||''); if(y) acc[y]=(acc[y]||0)+1; return acc; },{});
+  const yrData = Object.fromEntries(Object.entries(yrRaw).sort());
+  const barColors = ['#6366f1','#06b6d4','#a855f7','#ec4899','#f59e0b','#10b981','#f97316'];
   STATE.charts.year = new Chart(document.getElementById('chartYear'),{type:'bar',data:{
     labels:Object.keys(yrData),
     datasets:[{label:'Vacancies',data:Object.values(yrData),
@@ -653,6 +671,13 @@ function buildQualityData() {
   document.getElementById('contactCount').textContent = withContact.toLocaleString();
   document.getElementById('rawCount').textContent = withRaw.toLocaleString();
   document.getElementById('donutPct').textContent = Math.round((dups/total)*100)+'%';
+  // Update KPI cards dynamically
+  const metaYears = STATE.meta && STATE.meta.years ? STATE.meta.years : {};
+  const bestYear = Object.entries(metaYears).sort((a,b)=>b[1]-a[1])[0];
+  if (bestYear) document.getElementById('kpiBestYear').textContent = bestYear[0];
+  document.getElementById('kpiTotal').textContent = ((STATE.meta && STATE.meta.total) || total).toLocaleString();
+  document.getElementById('kpiDuplicates').textContent = dups.toLocaleString();
+  document.getElementById('kpiUnique').textContent = ((STATE.meta && STATE.meta.unique) || unique).toLocaleString();
 }
 
 // ── Counter Animation ─────────────────────────────
