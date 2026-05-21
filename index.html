@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeachyJobs — Egypt School Vacancies 2020–2024</title>
+  <title>TeachyJobs — School Vacancies</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Outfit:wght@300;400;500;600;700&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-<!-- Animated background -->
 <div class="bg-canvas">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-  <div class="blob blob-4"></div>
+  <div class="blob blob-1"></div><div class="blob blob-2"></div>
+  <div class="blob blob-3"></div><div class="blob blob-4"></div>
   <div class="mesh-grid"></div>
 </div>
 
@@ -27,35 +24,26 @@
     <div class="logo-wrap">
       <span class="logo-icon">🎓</span>
       <div class="logo-text-wrap">
-        <span class="logo-text" id="logoText">TeachyJobs</span>
-        <span class="logo-sub" id="logoSub">Egypt School Vacancies</span>
+        <span class="logo-text">TeachyJobs</span>
+        <span class="logo-sub">School Vacancies</span>
       </div>
     </div>
   </div>
   <div class="nav-right">
-    <button class="nav-btn instructions-btn" id="instructionsBtn" title="Instructions (?)">
-      <span class="btn-icon">📖</span>
-      <span class="btn-label" data-en="Guide" data-ar="دليل">Guide</span>
-    </button>
-    <button class="nav-btn lang-btn" id="langToggle" title="Toggle Arabic/English">
-      <span class="lang-icon">🌐</span>
-      <span class="lang-label" id="langLabel">AR</span>
-    </button>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
-      <span class="theme-icon" id="themeIcon">🌙</span>
-    </button>
+    <button class="nav-btn" id="bookmarksNavBtn" title="Saved Jobs">⭐ <span class="btn-label">Saved</span> <span class="bookmark-badge" id="bookmarkBadge">0</span></button>
+    <button class="nav-btn instructions-btn" id="instructionsBtn" title="Guide">📖 <span class="btn-label" data-en="Guide" data-ar="دليل">Guide</span></button>
+    <button class="nav-btn lang-btn" id="langToggle" title="Toggle Language">🌐 <span id="langLabel">AR</span></button>
+    <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
   </div>
 </nav>
 
-<!-- Hero Section -->
+<!-- Hero -->
 <section class="hero" id="heroSection">
-  <div class="hero-badge" data-en="🇪🇬 Egypt · 2020–2024" data-ar="🇪🇬 مصر · 2020–2024">🇪🇬 Egypt · 2020–2024</div>
+  <div class="hero-badge" id="heroBadge">📋 School Vacancies Database</div>
   <h1 class="hero-title">
     <span class="hero-word" style="--i:0">Teach</span><span class="hero-word accent-word" style="--i:1">y</span><span class="hero-word" style="--i:2">Jobs</span>
   </h1>
-  <p class="hero-sub" data-en="Browse 19,604 school vacancies across Egypt. Filter, explore trends, and find your next teaching role." data-ar="تصفح 19,604 وظيفة مدرسية في جميع أنحاء مصر. صفّ وابحث في الاتجاهات وابحث عن وظيفتك التعليمية التالية.">
-    Browse 19,604 school vacancies across Egypt. Filter, explore trends, and find your next teaching role.
-  </p>
+  <p class="hero-sub">Browse thousands of school vacancies. Filter, explore trends, and find your next teaching role.</p>
   <div class="hero-stats">
     <div class="stat-pill"><span class="stat-num" data-count="19604">0</span><span class="stat-label" data-en="Vacancies" data-ar="وظيفة">Vacancies</span></div>
     <div class="stat-pill"><span class="stat-num" data-count="56">0</span><span class="stat-label" data-en="Areas" data-ar="منطقة">Areas</span></div>
@@ -63,179 +51,179 @@
     <div class="stat-pill"><span class="stat-num" data-count="5">0</span><span class="stat-label" data-en="Years" data-ar="سنوات">Years</span></div>
   </div>
   <div class="hero-cta">
-    <button class="cta-btn primary" onclick="document.getElementById('browseSection').scrollIntoView({behavior:'smooth'})">
-      <span data-en="Browse Jobs" data-ar="تصفح الوظائف">Browse Jobs</span> →
-    </button>
-    <button class="cta-btn secondary" onclick="document.getElementById('analyticsSection').scrollIntoView({behavior:'smooth'})">
-      <span data-en="View Analytics" data-ar="عرض التحليلات">View Analytics</span>
-    </button>
+    <button class="cta-btn primary" onclick="document.getElementById('browseSection').scrollIntoView({behavior:'smooth'})"><span data-en="Browse Jobs" data-ar="تصفح الوظائف">Browse Jobs</span> →</button>
+    <button class="cta-btn secondary" onclick="switchTab('analytics')"><span data-en="View Analytics" data-ar="عرض التحليلات">View Analytics</span></button>
   </div>
 </section>
 
-<!-- Tab Navigation -->
+<!-- Tab Nav -->
 <div class="tab-nav" id="tabNav">
-  <button class="tab-btn active" data-tab="browse" data-en="Browse Vacancies" data-ar="تصفح الوظائف">Browse Vacancies</button>
-  <button class="tab-btn" data-tab="analytics" data-en="Analytics" data-ar="التحليلات">Analytics</button>
-  <button class="tab-btn" data-tab="duplicates" data-en="Data Quality" data-ar="جودة البيانات">Data Quality</button>
+  <button class="tab-btn active" data-tab="browse">Browse <span class="tab-count" id="tabCountBrowse"></span></button>
+  <button class="tab-btn" data-tab="analytics">Analytics</button>
+  <button class="tab-btn" data-tab="duplicates">Data Quality</button>
+  <button class="tab-btn" data-tab="bookmarks">⭐ Saved <span class="tab-count" id="tabCountBookmarks">0</span></button>
   <div class="tab-indicator"></div>
 </div>
 
 <!-- BROWSE SECTION -->
 <section class="section" id="browseSection" data-tab-content="browse">
 
-  <!-- Search & Filters -->
-  <div class="filter-card glass-card">
+  <!-- Quick Chips -->
+  <div class="quick-chips" id="quickChips">
+    <span class="chip-label" data-en="Quick:" data-ar="سريع:">Quick:</span>
+    <button class="chip" data-subject="English Language">English</button>
+    <button class="chip" data-subject="Mathematics">Maths</button>
+    <button class="chip" data-subject="Computer Science">Computer</button>
+    <button class="chip" data-subject="Arabic Language">Arabic</button>
+    <button class="chip" data-subject="French Language">French</button>
+    <button class="chip" data-subject="KG Teacher">KG</button>
+    <button class="chip" data-subject="Science">Science</button>
+    <button class="chip" data-area="New Cairo">New Cairo</button>
+    <button class="chip" data-area="Nasr City">Nasr City</button>
+    <button class="chip" data-area="Maadi">Maadi</button>
+    <button class="chip" data-contact="has">Has Contact</button>
+    <button class="chip chip-year" data-year="2024">2024</button>
+  </div>
+
+  <!-- Filter Card (sticky) -->
+  <div class="filter-card glass-card sticky-filter" id="filterCard">
     <div class="filter-header">
       <h2 class="section-title" data-en="🔍 Search & Filter" data-ar="🔍 البحث والتصفية">🔍 Search & Filter</h2>
-      <button class="clear-btn" id="clearFilters" data-en="Clear All" data-ar="مسح الكل">Clear All</button>
+      <div class="filter-actions">
+        <button class="export-btn" id="exportExcel">⬇ Excel</button>
+        <button class="export-btn" id="exportTxt">⬇ TXT</button>
+        <button class="clear-btn" id="clearFilters" data-en="Clear All" data-ar="مسح الكل">Clear All</button>
+      </div>
     </div>
+
     <div class="search-bar-wrap">
       <span class="search-icon">🔎</span>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search school name, subject, area..." />
+      <input type="text" class="search-input" id="searchInput" placeholder="Search school, subject, area, contact..." />
       <kbd class="kbd-hint">Ctrl+K</kbd>
     </div>
+
     <div class="filters-grid">
       <div class="filter-group">
         <label class="filter-label" data-en="Area" data-ar="المنطقة">Area</label>
-        <select class="filter-select" id="filterArea">
-          <option value="" data-en="All Areas" data-ar="جميع المناطق">All Areas</option>
-        </select>
+        <select class="filter-select" id="filterArea"><option value="">All Areas</option></select>
       </div>
       <div class="filter-group">
         <label class="filter-label" data-en="Subject" data-ar="المادة">Subject</label>
-        <select class="filter-select" id="filterSubject">
-          <option value="" data-en="All Subjects" data-ar="جميع المواد">All Subjects</option>
-        </select>
+        <select class="filter-select" id="filterSubject"><option value="">All Subjects</option></select>
       </div>
       <div class="filter-group">
         <label class="filter-label" data-en="Year" data-ar="السنة">Year</label>
-        <select class="filter-select" id="filterYear">
-          <option value="" data-en="All Years" data-ar="جميع السنوات">All Years</option>
-          <option value="2020">2020</option>
-          <option value="2021">2021</option>
-          <option value="2022">2022</option>
-          <option value="2023">2023</option>
-          <option value="2024">2024</option>
-        </select>
+        <select class="filter-select" id="filterYear"><option value="">All Years</option></select>
       </div>
       <div class="filter-group">
-        <label class="filter-label" data-en="Show Duplicates" data-ar="عرض المكررات">Show Duplicates</label>
+        <label class="filter-label" data-en="Contact Type" data-ar="نوع الاتصال">Contact Type</label>
+        <select class="filter-select" id="filterContact">
+          <option value="">Any Contact</option>
+          <option value="email">Email Only</option>
+          <option value="phone">Phone Only</option>
+          <option value="has">Has Contact</option>
+          <option value="none">No Contact</option>
+        </select>
+      </div>
+      <div class="filter-group date-range-group">
+        <label class="filter-label" data-en="Date Range" data-ar="نطاق التاريخ">Date Range <span class="mutex-note" id="mutexNote">(clears Year)</span></label>
+        <div class="date-range-wrap">
+          <input type="date" class="filter-select date-input" id="dateFrom" />
+          <span class="date-sep">→</span>
+          <input type="date" class="filter-select date-input" id="dateTo" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" data-en="Duplicates" data-ar="المكررات">Duplicates</label>
         <select class="filter-select" id="filterDuplicates">
-          <option value="" data-en="All Records" data-ar="جميع السجلات">All Records</option>
-          <option value="no" data-en="Unique Only" data-ar="الفريدة فقط">Unique Only</option>
-          <option value="yes" data-en="Duplicates Only" data-ar="المكررات فقط">Duplicates Only</option>
+          <option value="">All Records</option>
+          <option value="no">Unique Only</option>
+          <option value="yes">Duplicates Only</option>
         </select>
       </div>
     </div>
-    <div class="results-meta" id="resultsMeta">
+
+    <div class="results-meta">
       <span class="results-count" id="resultsCount">Loading...</span>
       <div class="sort-wrap">
-        <label class="filter-label" data-en="Sort:" data-ar="ترتيب:">Sort:</label>
+        <label class="filter-label">Sort:</label>
         <select class="filter-select mini" id="sortSelect">
-          <option value="date-desc" data-en="Newest First" data-ar="الأحدث أولاً">Newest First</option>
-          <option value="date-asc" data-en="Oldest First" data-ar="الأقدم أولاً">Oldest First</option>
-          <option value="school-az" data-en="School A→Z" data-ar="المدرسة أ→ي">School A→Z</option>
-          <option value="area-az" data-en="Area A→Z" data-ar="المنطقة أ→ي">Area A→Z</option>
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="school-az">School A→Z</option>
+          <option value="area-az">Area A→Z</option>
         </select>
       </div>
     </div>
   </div>
 
-  <!-- Job Cards Grid -->
   <div class="jobs-grid" id="jobsGrid"></div>
-
-  <!-- Pagination -->
   <div class="pagination" id="pagination"></div>
 </section>
 
 <!-- ANALYTICS SECTION -->
 <section class="section hidden" id="analyticsSection" data-tab-content="analytics">
-  <h2 class="section-title" data-en="📊 Analytics Dashboard" data-ar="📊 لوحة التحليلات">📊 Analytics Dashboard</h2>
+  <h2 class="section-title">📊 Analytics Dashboard</h2>
   <div class="analytics-grid">
     <div class="chart-card glass-card wide">
-      <h3 class="chart-title" data-en="Vacancies by Year" data-ar="الوظائف حسب السنة">Vacancies by Year</h3>
+      <h3 class="chart-title">Vacancies by Year</h3>
       <canvas id="chartYear"></canvas>
     </div>
     <div class="chart-card glass-card">
-      <h3 class="chart-title" data-en="Top 10 Areas" data-ar="أعلى 10 مناطق">Top 10 Areas</h3>
+      <h3 class="chart-title">Top 10 Areas</h3>
       <canvas id="chartArea"></canvas>
     </div>
     <div class="chart-card glass-card">
-      <h3 class="chart-title" data-en="Top 15 Subjects" data-ar="أعلى 15 مادة">Top 15 Subjects</h3>
+      <h3 class="chart-title">Top 15 Subjects</h3>
       <canvas id="chartSubject"></canvas>
     </div>
     <div class="chart-card glass-card wide">
-      <h3 class="chart-title" data-en="Monthly Trend (All Years)" data-ar="الاتجاه الشهري (جميع السنوات)">Monthly Trend (All Years)</h3>
+      <h3 class="chart-title">Monthly Trend (All Years)</h3>
       <canvas id="chartMonthly"></canvas>
     </div>
+    <div class="chart-card glass-card wide">
+      <h3 class="chart-title">Subject Demand by Year</h3>
+      <canvas id="chartSubjectTrend"></canvas>
+    </div>
   </div>
-
-  <!-- KPI Cards -->
-  <div class="kpi-grid" id="kpiGrid">
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">📌</div>
-      <div class="kpi-value" id="kpiTotal">19,604</div>
-      <div class="kpi-label" data-en="Total Vacancies" data-ar="إجمالي الوظائف">Total Vacancies</div>
-    </div>
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">🏆</div>
-      <div class="kpi-value" id="kpiBestYear">2022</div>
-      <div class="kpi-label" data-en="Most Active Year" data-ar="أكثر سنة نشاطاً">Most Active Year</div>
-    </div>
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">📍</div>
-      <div class="kpi-value" id="kpiTopArea">New Cairo</div>
-      <div class="kpi-label" data-en="Top Named Area" data-ar="أعلى منطقة محددة">Top Named Area</div>
-    </div>
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">📚</div>
-      <div class="kpi-value" id="kpiTopSubject">English</div>
-      <div class="kpi-label" data-en="Most Demanded Subject" data-ar="أكثر مادة طلباً">Most Demanded Subject</div>
-    </div>
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">⚠️</div>
-      <div class="kpi-value" id="kpiDuplicates">7,088</div>
-      <div class="kpi-label" data-en="Duplicate Records" data-ar="سجلات مكررة">Duplicate Records</div>
-    </div>
-    <div class="kpi-card glass-card">
-      <div class="kpi-icon">✅</div>
-      <div class="kpi-value" id="kpiUnique">12,516</div>
-      <div class="kpi-label" data-en="Unique Records" data-ar="سجلات فريدة">Unique Records</div>
-    </div>
+  <div class="kpi-grid">
+    <div class="kpi-card glass-card"><div class="kpi-icon">📌</div><div class="kpi-value" id="kpiTotal">19,604</div><div class="kpi-label">Total Vacancies</div></div>
+    <div class="kpi-card glass-card"><div class="kpi-icon">🏆</div><div class="kpi-value" id="kpiBestYear">2022</div><div class="kpi-label">Most Active Year</div></div>
+    <div class="kpi-card glass-card"><div class="kpi-icon">📍</div><div class="kpi-value" id="kpiTopArea">New Cairo</div><div class="kpi-label">Top Named Area</div></div>
+    <div class="kpi-card glass-card"><div class="kpi-icon">📚</div><div class="kpi-value" id="kpiTopSubject">English</div><div class="kpi-label">Most Demanded Subject</div></div>
+    <div class="kpi-card glass-card"><div class="kpi-icon">⚠️</div><div class="kpi-value" id="kpiDuplicates">7,088</div><div class="kpi-label">Duplicate Records</div></div>
+    <div class="kpi-card glass-card"><div class="kpi-icon">✅</div><div class="kpi-value" id="kpiUnique">12,516</div><div class="kpi-label">Unique Records</div></div>
   </div>
 </section>
 
 <!-- DATA QUALITY SECTION -->
 <section class="section hidden" id="duplicatesSection" data-tab-content="duplicates">
-  <h2 class="section-title" data-en="🔬 Data Quality Report" data-ar="🔬 تقرير جودة البيانات">🔬 Data Quality Report</h2>
+  <h2 class="section-title">🔬 Data Quality Report</h2>
   <div class="quality-grid">
     <div class="quality-stat-card glass-card">
       <div class="donut-wrap">
         <canvas id="donutDuplicates"></canvas>
-        <div class="donut-center">
-          <span class="donut-pct" id="donutPct">36%</span>
-          <span class="donut-sub" data-en="Duplicates" data-ar="مكرر">Duplicates</span>
-        </div>
+        <div class="donut-center"><span class="donut-pct" id="donutPct">36%</span><span class="donut-sub">Duplicates</span></div>
       </div>
-      <p class="quality-note" data-en="7,088 out of 19,604 records are marked as duplicates." data-ar="7,088 من أصل 19,604 سجل مُعلَّمة كمكررة.">7,088 out of 19,604 records are marked as duplicates.</p>
+      <p class="quality-note">7,088 out of 19,604 records are marked as duplicates.</p>
     </div>
     <div class="quality-breakdown glass-card">
-      <h3 class="chart-title" data-en="Missing Data by Field" data-ar="البيانات المفقودة حسب الحقل">Missing Data by Field</h3>
+      <h3 class="chart-title">Missing Data by Field</h3>
       <canvas id="chartMissing"></canvas>
     </div>
     <div class="quality-breakdown glass-card">
-      <h3 class="chart-title" data-en="Unknown Area Breakdown" data-ar="توزيع المناطق غير المعروفة">Unknown Area Breakdown</h3>
+      <h3 class="chart-title">Data Stats</h3>
       <div class="quality-info">
-        <div class="qi-row"><span data-en="Unknown Area records" data-ar="سجلات غير معروفة">Unknown Area records</span><strong id="unknownCount">7,330</strong></div>
-        <div class="qi-row"><span data-en="Named Area records" data-ar="سجلات ذات مناطق محددة">Named Area records</span><strong id="namedCount">12,274</strong></div>
-        <div class="qi-row"><span data-en="Records with Contact" data-ar="سجلات بها معلومات اتصال">Records with Contact</span><strong id="contactCount">—</strong></div>
-        <div class="qi-row"><span data-en="Records with Raw Ad" data-ar="سجلات بها نص الإعلان">Records with Raw Ad</span><strong id="rawCount">—</strong></div>
+        <div class="qi-row"><span>Unknown Area</span><strong id="unknownCount">7,330</strong></div>
+        <div class="qi-row"><span>Named Area</span><strong id="namedCount">12,274</strong></div>
+        <div class="qi-row"><span>With Contact</span><strong id="contactCount">—</strong></div>
+        <div class="qi-row"><span>With Raw Ad</span><strong id="rawCount">—</strong></div>
       </div>
     </div>
   </div>
   <div class="duplicates-list-wrap glass-card">
     <div class="filter-header">
-      <h3 class="chart-title" data-en="🔁 Duplicate Records" data-ar="🔁 السجلات المكررة">🔁 Duplicate Records</h3>
+      <h3 class="chart-title">🔁 Duplicate Records</h3>
       <span class="results-count" id="dupCount">7,088 records</span>
     </div>
     <div class="jobs-grid" id="duplicatesGrid"></div>
@@ -243,108 +231,106 @@
   </div>
 </section>
 
-<!-- Job Detail Modal -->
+<!-- BOOKMARKS SECTION -->
+<section class="section hidden" id="bookmarksSection" data-tab-content="bookmarks">
+  <div class="bookmarks-header">
+    <h2 class="section-title">⭐ Saved Vacancies</h2>
+    <button class="clear-btn" id="clearBookmarks">Clear All Saved</button>
+  </div>
+  <div class="jobs-grid" id="bookmarksGrid"></div>
+  <div id="bookmarksEmpty" class="no-results hidden">
+    <span class="no-results-icon">⭐</span>
+    <div class="no-results-title">No saved vacancies yet</div>
+    <p style="font-size:13px;color:var(--text3);margin-top:8px;">Click the ⭐ star on any vacancy row to save it here.</p>
+  </div>
+</section>
+
+<!-- Job Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-card glass-card" id="modalCard">
     <button class="modal-close" id="modalClose">✕</button>
     <div class="modal-body" id="modalBody"></div>
+    <div class="modal-similar" id="modalSimilar"></div>
+  </div>
+</div>
+
+<!-- School Profile Modal -->
+<div class="modal-overlay" id="schoolOverlay">
+  <div class="modal-card glass-card" id="schoolCard" style="max-width:780px">
+    <button class="modal-close" id="schoolClose">✕</button>
+    <div class="modal-body" id="schoolBody"></div>
   </div>
 </div>
 
 <!-- Instructions Modal -->
 <div class="modal-overlay" id="instructionsOverlay">
-  <div class="modal-card glass-card instructions-modal" id="instructionsCard">
+  <div class="modal-card glass-card instructions-modal">
     <button class="modal-close" id="instructionsClose">✕</button>
-    <div class="instructions-body" id="instructionsBody">
-      <div class="inst-header">
-        <span class="inst-logo">🎓</span>
-        <h2 class="inst-title" data-en="TeachyJobs — Complete Guide" data-ar="TeachyJobs — الدليل الكامل">TeachyJobs — Complete Guide</h2>
-      </div>
-      <div class="inst-sections">
-        <div class="inst-section">
-          <h3>🔍 Browsing & Searching</h3>
-          <ul>
-            <li><kbd>Ctrl+K</kbd> — Focus search bar instantly from anywhere</li>
-            <li>Type any keyword: school name, subject, area, or contact</li>
-            <li>Results update live as you type</li>
-            <li>Click any job card to see full details including the raw Arabic ad</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>🎛️ Filters</h3>
-          <ul>
-            <li><strong>Area</strong> — Filter by one of 56 Egyptian areas</li>
-            <li><strong>Subject</strong> — Filter by teaching subject (51 types)</li>
-            <li><strong>Year</strong> — Browse data from 2020 to 2024</li>
-            <li><strong>Duplicates</strong> — Show all, unique only, or duplicates only</li>
-            <li>Click <strong>Clear All</strong> to reset all filters at once</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>📊 Analytics Tab</h3>
-          <ul>
-            <li>See yearly vacancy trends with a bar chart</li>
-            <li>Explore the top 10 hottest areas for hiring</li>
-            <li>Discover the most in-demand teaching subjects</li>
-            <li>View a monthly trend line across all years</li>
-            <li>6 KPI cards summarize key statistics</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>🔬 Data Quality Tab</h3>
-          <ul>
-            <li>Visual donut chart: unique vs duplicate ratio</li>
-            <li>Missing data breakdown per field</li>
-            <li>Browse all 7,088 duplicate records with pagination</li>
-            <li>Understand data completeness at a glance</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>⌨️ Keyboard Shortcuts</h3>
-          <ul>
-            <li><kbd>Ctrl+K</kbd> — Open search</li>
-            <li><kbd>Escape</kbd> — Close any open modal</li>
-            <li><kbd>?</kbd> — Open this guide</li>
-            <li><kbd>T</kbd> — Toggle light/dark theme</li>
-            <li><kbd>L</kbd> — Toggle language (EN/AR)</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>🌐 Language Toggle</h3>
-          <ul>
-            <li>Click the <strong>🌐 AR</strong> button in the top-right navbar</li>
-            <li>Switches the full UI between English and Arabic</li>
-            <li>Arabic mode uses right-to-left (RTL) layout</li>
-            <li>Job cards display original Arabic ad text when available</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>🌙 Dark / Light Mode</h3>
-          <ul>
-            <li>Click the moon/sun icon in the top-right corner</li>
-            <li>Your preference is saved automatically for next visit</li>
-            <li>Press <kbd>T</kbd> for instant keyboard toggle</li>
-          </ul>
-        </div>
-        <div class="inst-section">
-          <h3>📄 Job Card Details</h3>
-          <ul>
-            <li>Click any card to open the full detail modal</li>
-            <li>See school name, area, subjects, year, contact, and raw ad</li>
-            <li>Copy contact info directly from the modal</li>
-            <li>Duplicate badge shows if a record is a duplicate</li>
-          </ul>
-        </div>
-      </div>
+    <div class="inst-header"><span class="inst-logo">🎓</span><h2 class="inst-title">TeachyJobs — Complete Guide</h2></div>
+    <div class="inst-sections">
+      <div class="inst-section"><h3>🔍 Search & Filter</h3><ul>
+        <li><kbd>Ctrl+K</kbd> — Focus search bar from anywhere</li>
+        <li>Search keywords highlight in yellow on matching rows</li>
+        <li>Quick Chips — one-click preset filters (English, Maths, New Cairo…)</li>
+        <li>Contact Type filter — Email, Phone, Has Contact, No Contact</li>
+        <li>Date Range and Year are mutually exclusive — picking one locks the other</li>
+        <li><strong>Clear All</strong> resets every filter at once</li>
+      </ul></div>
+      <div class="inst-section"><h3>📋 Vacancy Rows</h3><ul>
+        <li>Click ⭐ to save/unsave any vacancy</li>
+        <li>Click 📋 to copy contact info to clipboard instantly</li>
+        <li>Click the school name to see all their postings</li>
+        <li>Click anywhere else on the row to open full details</li>
+        <li>Pink left border = duplicate record</li>
+        <li>Zebra striping helps track rows at a glance</li>
+      </ul></div>
+      <div class="inst-section"><h3>📊 Analytics Tab</h3><ul>
+        <li>Yearly bar chart, top areas, top subjects</li>
+        <li>Monthly trend line across all years</li>
+        <li>Subject Demand by Year — grouped chart</li>
+        <li>6 KPI summary cards</li>
+      </ul></div>
+      <div class="inst-section"><h3>⭐ Saved Tab</h3><ul>
+        <li>All starred vacancies appear here</li>
+        <li>Saved jobs persist across sessions (localStorage)</li>
+        <li>Clear all saved with one button</li>
+        <li>Tab shows live count of saved jobs</li>
+      </ul></div>
+      <div class="inst-section"><h3>📁 Export</h3><ul>
+        <li><strong>Excel</strong> — exports current filtered results as .csv (UTF-8, opens in Excel)</li>
+        <li><strong>TXT</strong> — exports as formatted plain text report</li>
+        <li>Exports only the active tab's visible data</li>
+      </ul></div>
+      <div class="inst-section"><h3>⌨️ Keyboard Shortcuts</h3><ul>
+        <li><kbd>Ctrl+K</kbd> — Search</li>
+        <li><kbd>Esc</kbd> — Close modal</li>
+        <li><kbd>?</kbd> — This guide</li>
+        <li><kbd>T</kbd> — Toggle theme</li>
+        <li><kbd>L</kbd> — Toggle language</li>
+        <li><kbd>B</kbd> — Go to Saved tab</li>
+      </ul></div>
+      <div class="inst-section"><h3>🌐 Language & Theme</h3><ul>
+        <li>AR/EN toggle — full RTL Arabic mode</li>
+        <li>🌙 Dark mode saved to localStorage</li>
+        <li>Press <kbd>T</kbd> to instantly toggle</li>
+      </ul></div>
+      <div class="inst-section"><h3>🏫 School Profile</h3><ul>
+        <li>Click any school name (underlined) to see all their postings</li>
+        <li>School modal shows count, years active, all vacancies</li>
+        <li>Opens as a separate modal over the current view</li>
+      </ul></div>
     </div>
   </div>
 </div>
 
-<!-- Loading overlay -->
+<!-- Back to top -->
+<button class="back-to-top" id="backToTop" title="Back to top">↑</button>
+
+<!-- Loading -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-card">
     <div class="spinner"></div>
-    <p class="loading-text" data-en="Loading TeachyJobs..." data-ar="جارٍ تحميل TeachyJobs...">Loading TeachyJobs...</p>
+    <p class="loading-text">Loading TeachyJobs...</p>
   </div>
 </div>
 
