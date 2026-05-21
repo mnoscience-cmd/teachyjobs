@@ -84,10 +84,13 @@ function renderBookmarks() {
   const grid = document.getElementById('bookmarksGrid');
   const empty = document.getElementById('bookmarksEmpty');
   const records = STATE.data.filter((r, i) => STATE.bookmarks.has(makeId(r, i)));
-  grid.innerHTML = '';
-  if (!records.length) { empty.classList.remove('hidden'); return; }
+  if (!records.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-  records.forEach((r, i) => grid.appendChild(createJobRow(r, findIdx(r), i)));
+  _renderQ = '';
+  const bkFrag = document.createDocumentFragment();
+  records.forEach(r => bkFrag.appendChild(createJobRow(r, STATE._indexMap?.get(r) ?? 0)));
+  grid.innerHTML = '';
+  grid.appendChild(bkFrag);
 }
 function makeId(r, fallback) {
   return `${r['School Name']||''}|${r.Date||''}|${r.Area||''}|${r['Subjects/Jobs']||''}`;
@@ -164,14 +167,64 @@ function initApp(raw, meta) {
   STATE.meta = meta || {};
   STATE.filtered = [...raw];
   STATE.duplicates = raw.filter(r => r.Duplicate);
+  STATE._indexMapStale = true;
   loadBookmarks();
   populateFilters(meta);
+  setupGridDelegation();
   switchTab('browse', false);
   renderJobs();
   buildCharts();
   buildQualityData();
   animateCounters();
   document.getElementById('loadingOverlay').classList.add('done');
+}
+
+// Event delegation — one listener per grid, handles all row interactions
+function setupGridDelegation() {
+  ['jobsGrid','duplicatesGrid','bookmarksGrid'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.addEventListener('click', e => {
+      const row = e.target.closest('.job-card');
+      if (!row) return;
+      const idx = parseInt(row.dataset.idx);
+      const r = STATE.data[idx];
+      if (!r) return;
+
+      // Star button
+      if (e.target.closest('.star-btn')) {
+        e.stopPropagation();
+        toggleBookmark(row.dataset.id);
+        const btn = e.target.closest('.star-btn');
+        const isNow = STATE.bookmarks.has(row.dataset.id);
+        btn.textContent = isNow ? '⭐' : '☆';
+        btn.classList.toggle('starred', isNow);
+        return;
+      }
+
+      // Copy contact button
+      if (e.target.closest('.copy-contact-btn')) {
+        e.stopPropagation();
+        const contact = row.dataset.contact;
+        const btn = e.target.closest('.copy-contact-btn');
+        navigator.clipboard.writeText(contact).then(() => {
+          btn.textContent = '✓'; btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1500);
+        });
+        return;
+      }
+
+      // School name link
+      if (e.target.closest('.job-school-link')) {
+        e.stopPropagation();
+        openSchoolModal(row.dataset.school);
+        return;
+      }
+
+      // Row click → modal
+      openModal(r);
+    });
+  });
 }
 
 // ── Populate Filters ─────────────────────────────
@@ -230,6 +283,7 @@ function applyFilters() {
   document.getElementById('dateTo').classList.toggle('locked', !!year && !useDR);
   document.getElementById('mutexNote').style.display = useDR ? 'inline' : 'none';
 
+  STATE._indexMapStale = false; // index map stays valid, data doesn't change
   STATE.filtered = STATE.data.filter(r => {
     if (q) {
       const hay = [r['School Name'], r['Subjects/Jobs'], r.Area, r.Contact, r['Raw Ad Text']].join(' ').toLowerCase();
@@ -278,15 +332,25 @@ function renderJobs() {
     total === 0 ? '0 results' : `Showing ${(start+1).toLocaleString()}–${end.toLocaleString()} of ${total.toLocaleString()} results`;
 
   if (!slice.length) {
-    grid.innerHTML = `<div class="no-results"><span class="no-results-icon">🔍</span><div class="no-results-title">No vacancies found</div><p style="font-size:13px;color:var(--text3);margin-top:8px">Try adjusting your filters or search terms.</p></div>`;
+    grid.innerHTML = '<div class="no-results"><span class="no-results-icon">🔍</span><div class="no-results-title">No vacancies found</div><p style="font-size:13px;color:var(--text3);margin-top:8px">Try adjusting your filters or search terms.</p></div>';
     renderPagination('pagination', total, page, p => { STATE.page = p; renderJobs(); scrollToGrid(); });
     return;
   }
 
-  grid.innerHTML = '';
+  // Cache query once for entire batch
+  _renderQ = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  // Build index map once — avoids O(n) indexOf per row
+  if (!STATE._indexMap || STATE._indexMapStale) {
+    STATE._indexMap = new Map(STATE.data.map((r, i) => [r, i]));
+    STATE._indexMapStale = false;
+  }
+
   const frag = document.createDocumentFragment();
-  slice.forEach((r, i) => frag.appendChild(createJobRow(r, STATE.data.indexOf(r), i)));
+  slice.forEach(r => frag.appendChild(createJobRow(r, STATE._indexMap.get(r) ?? 0)));
+  grid.innerHTML = '';
   grid.appendChild(frag);
+
   renderPagination('pagination', total, page, p => { STATE.page = p; renderJobs(); scrollToGrid(); });
 }
 
@@ -295,74 +359,50 @@ function scrollToGrid() {
 }
 
 // ── Create Job Row ────────────────────────────────
-function createJobRow(r, dataIdx, animIdx) {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+// Cached query for current render batch
+let _renderQ = '';
+
+function createJobRow(r, dataIdx) {
   const id = makeId(r, dataIdx);
   const isBookmarked = STATE.bookmarks.has(id);
+  const q = _renderQ;
 
   const subjects = (r['Subjects/Jobs'] || '').split('/').map(s => s.trim()).filter(Boolean).slice(0, 5);
-  const subjectTags = subjects.map(s => `<span class="subject-tag">${highlight(s, q)}</span>`).join('');
-  const schoolName = highlight(r['School Name'] || 'Unknown School', q);
-  const areaText   = highlight(r.Area || 'Unknown', q);
   const contactStr = r.Contact || '';
-  const contactShort = contactStr.substring(0, 38);
-  const dupBadge = r.Duplicate ? `<span class="dup-badge">DUP</span>` : '';
 
   const row = document.createElement('div');
   row.className = 'job-card' + (r.Duplicate ? ' is-duplicate' : '');
-  row.style.animationDelay = `${Math.min(animIdx, 10) * 0.018}s`;
+  row.dataset.idx = dataIdx;
+  row.dataset.id = id;
+  row.dataset.contact = contactStr;
+  row.dataset.school = r['School Name'] || '';
 
-  row.innerHTML = `
-    <div class="job-card-header">
-      <div class="job-school">
-        <button class="job-school-link" data-school="${escHtml(r['School Name'] || '')}">${schoolName}</button>
-      </div>
-      ${dupBadge}
-    </div>
-    <div class="job-meta-row">
-      <div class="job-area"><div class="job-area-dot"></div>${areaText}</div>
-      <div class="job-subjects">${subjectTags || '<span class="subject-tag">—</span>'}</div>
-    </div>
-    <div class="job-right-meta">
-      <div style="display:flex;align-items:center;gap:5px">
-        <button class="star-btn${isBookmarked?' starred':''}" data-id="${escHtml(id)}" title="Save vacancy">${isBookmarked?'⭐':'☆'}</button>
-        <span class="job-year">📅 ${r.Year || '—'}</span>
-      </div>
-      ${contactShort ? `<div class="job-contact-wrap">
-        <button class="copy-contact-btn" data-contact="${escHtml(contactStr)}" title="Copy contact">📋</button>
-        <span class="job-contact">${highlight(contactShort, q)}</span>
-      </div>` : ''}
-    </div>
-  `;
+  // Build innerHTML as single string — fastest approach
+  let html = '<div class="job-card-header"><div class="job-school"><button class="job-school-link">';
+  html += highlight(r['School Name'] || 'Unknown School', q);
+  html += '</button></div>';
+  if (r.Duplicate) html += '<span class="dup-badge">DUP</span>';
+  html += '</div>';
 
-  // Star click
-  row.querySelector('.star-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    toggleBookmark(id);
-  });
+  html += '<div class="job-meta-row"><div class="job-area"><div class="job-area-dot"></div>';
+  html += highlight(r.Area || 'Unknown', q);
+  html += '</div><div class="job-subjects">';
+  if (subjects.length) {
+    subjects.forEach(s => { html += '<span class="subject-tag">'; html += highlight(s, q); html += '</span>'; });
+  } else { html += '<span class="subject-tag">—</span>'; }
+  html += '</div></div>';
 
-  // Copy contact click
-  const copyBtn = row.querySelector('.copy-contact-btn');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      navigator.clipboard.writeText(contactStr).then(() => {
-        copyBtn.textContent = '✓';
-        copyBtn.classList.add('copied');
-        setTimeout(() => { copyBtn.textContent = '📋'; copyBtn.classList.remove('copied'); }, 1500);
-      });
-    });
+  html += '<div class="job-right-meta"><div class="row-actions">';
+  html += `<button class="star-btn${isBookmarked?' starred':''}" title="Save">${isBookmarked?'⭐':'☆'}</button>`;
+  html += `<span class="job-year">📅 ${r.Year || '—'}</span>`;
+  html += '</div>';
+  if (contactStr) {
+    html += `<div class="job-contact-wrap"><button class="copy-contact-btn" title="Copy">📋</button>`;
+    html += `<span class="job-contact">${highlight(contactStr.substring(0, 38), q)}</span></div>`;
   }
+  html += '</div>';
 
-  // School name click → school profile
-  row.querySelector('.job-school-link').addEventListener('click', e => {
-    e.stopPropagation();
-    openSchoolModal(r['School Name'] || '');
-  });
-
-  // Row click → full detail modal
-  row.addEventListener('click', () => openModal(r));
-
+  row.innerHTML = html;
   return row;
 }
 
@@ -384,8 +424,10 @@ function renderDuplicates() {
   const slice = data.slice(start, Math.min(start + perPage, total));
   document.getElementById('dupCount').textContent = `${total.toLocaleString()} records`;
   grid.innerHTML = '';
+  _renderQ = '';
   const dupFrag = document.createDocumentFragment();
-  slice.forEach((r, i) => dupFrag.appendChild(createJobRow(r, STATE.data.indexOf(r), i)));
+  slice.forEach(r => dupFrag.appendChild(createJobRow(r, STATE._indexMap?.get(r) ?? 0)));
+  grid.innerHTML = '';
   grid.appendChild(dupFrag);
   renderPagination('dupPagination', total, dupPage, p => { STATE.dupPage = p; renderDuplicates(); });
 }
@@ -479,8 +521,9 @@ function openSchoolModal(name) {
     <div class="jobs-grid" id="schoolJobsGrid"></div>
   `;
   const grid = document.getElementById('schoolJobsGrid');
+  _renderQ = '';
   const sFrag = document.createDocumentFragment();
-  records.slice(0, 30).forEach((r, i) => sFrag.appendChild(createJobRow(r, STATE.data.indexOf(r), i)));
+  records.slice(0, 20).forEach(r => sFrag.appendChild(createJobRow(r, STATE._indexMap?.get(r) ?? 0)));
   grid.appendChild(sFrag);
   document.getElementById('schoolOverlay').classList.add('open');
 }
