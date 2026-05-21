@@ -98,27 +98,40 @@ function findIdx(r) {
 
 // ── Data Loading ────────────────────────────────
 async function loadData() {
-  const candidates = [
-    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/main/Data.json',
-    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/main/Data',
-    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/master/Data.json',
-    'https://raw.githubusercontent.com/mnoscience-cmd/teachyjobs/master/Data',
-    'Data.json',
-    'Data',
-  ];
+  // Build candidate URLs automatically — works on ANY repo, no hardcoding needed
+  const candidates = [];
+
+  // 1. Same folder as the HTML file (relative — always works on any server)
+  candidates.push('./Data.json');
+  candidates.push('./Data');
+
+  // 2. If on GitHub Pages (username.github.io/repo), build raw.githubusercontent.com URL
+  if (location.hostname.endsWith('github.io')) {
+    const user = location.hostname.split('.')[0];
+    const repo = location.pathname.split('/').filter(Boolean)[0] || '';
+    const base = `https://raw.githubusercontent.com/${user}/${repo}`;
+    candidates.unshift(`${base}/main/Data.json`);
+    candidates.unshift(`${base}/main/Data`);
+    candidates.unshift(`${base}/master/Data.json`);
+    candidates.unshift(`${base}/master/Data`);
+  }
+
   for (const url of candidates) {
     try {
       const res = await fetch(url);
       if (!res.ok) continue;
       const text = await res.text();
-      if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) continue;
-      const parsed = JSON.parse(text);
+      const trimmed = text.trim();
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) continue;
+      const parsed = JSON.parse(trimmed);
       const raw = Array.isArray(parsed) ? parsed : (parsed.records || parsed);
       if (!raw || !raw.length) continue;
-      console.log('Loaded from:', url);
+      console.log('[TeachyJobs] Loaded from:', url);
       initApp(raw, parsed); return;
-    } catch (e) { console.warn('Failed:', url, e.message); continue; }
+    } catch (e) { console.warn('[TeachyJobs] Skipped:', url, e.message); continue; }
   }
+
+  // Nothing worked — show file picker as last resort
   showFilePicker();
 }
 
