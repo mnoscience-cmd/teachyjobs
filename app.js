@@ -93,7 +93,7 @@ function renderBookmarks() {
   grid.appendChild(bkFrag);
 }
 function makeId(r, fallback) {
-  return `${r['School Name']||''}|${r.Date||''}|${r.Area||''}|${r['Subjects/Jobs']||''}`;
+  return `${r.n||''}|${r.d||''}|${r.a||''}|${r.s||''}`;
 }
 function findIdx(r) {
   return STATE.data.indexOf(r);
@@ -163,10 +163,11 @@ function showFilePicker() {
 }
 
 function initApp(raw, meta) {
+  // raw is flat array with short keys {i,n,s,a,c,y,d,dup}
   STATE.data = raw;
   STATE.meta = meta || {};
   STATE.filtered = [...raw];
-  STATE.duplicates = raw.filter(r => r.Duplicate);
+  STATE.duplicates = raw.filter(r => r.dup);
   STATE._indexMapStale = true;
   loadBookmarks();
   populateFilters(meta);
@@ -229,16 +230,16 @@ function setupGridDelegation() {
 
 // ── Populate Filters ─────────────────────────────
 function populateFilters(meta) {
-  const areas = [...new Set(STATE.data.map(r => r.Area).filter(a => a && a !== '(Unknown)'))].sort();
+  const areas = [...new Set(STATE.data.map(r => r.a).filter(a => a && a !== '(Unknown)' && a !== ''))].sort();
   const areaEl = document.getElementById('filterArea');
   areas.forEach(a => { const o = document.createElement('option'); o.value = o.textContent = a; areaEl.appendChild(o); });
 
   const subjects = new Set();
-  STATE.data.forEach(r => { if (r['Subjects/Jobs']) r['Subjects/Jobs'].split('/').forEach(s => subjects.add(s.trim())); });
+  STATE.data.forEach(r => { if (r.s) r.s.split('/').forEach(s => { const t=s.trim(); if(t) subjects.add(t); }); });
   const subjEl = document.getElementById('filterSubject');
   [...subjects].sort().forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; subjEl.appendChild(o); });
 
-  const years = [...new Set(STATE.data.map(r => String(r.Year)).filter(Boolean))].sort();
+  const years = [...new Set(STATE.data.map(r => r.y).filter(Boolean))].sort();
   const yearEl = document.getElementById('filterYear');
   while (yearEl.options.length > 1) yearEl.remove(1);
   years.forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; yearEl.appendChild(o); });
@@ -286,23 +287,23 @@ function applyFilters() {
   STATE._indexMapStale = false; // index map stays valid, data doesn't change
   STATE.filtered = STATE.data.filter(r => {
     if (q) {
-      const hay = [r['School Name'], r['Subjects/Jobs'], r.Area, r.Contact, r['Raw Ad Text']].join(' ').toLowerCase();
+      const hay = [r.n, r.s, r.a, r.c, r.rawAd].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
-    if (area && r.Area !== area) return false;
-    if (subj && !(r['Subjects/Jobs'] || '').split('/').map(s => s.trim()).includes(subj)) return false;
-    if (!useDR && year && String(r.Year) !== year) return false;
+    if (area && r.a !== area) return false;
+    if (subj && !(r.s || '').split('/').map(s => s.trim()).includes(subj)) return false;
+    if (!useDR && year && r.y !== year) return false;
     if (useDR) {
-      const d = (r.Date || '').substring(0, 10);
-      if (from && d < from) return false;
-      if (to && d > to) return false;
+      const rd = (r.d||'').substring(0,10);
+      if (from && rd < from) return false;
+      if (to && rd > to) return false;
     }
-    if (dup === 'no' && r.Duplicate) return false;
-    if (dup === 'yes' && !r.Duplicate) return false;
-    if (ct === 'email' && !(r.Contact && r.Contact.includes('@'))) return false;
-    if (ct === 'phone' && !(r.Contact && !r.Contact.includes('@') && /\d/.test(r.Contact))) return false;
-    if (ct === 'has' && !r.Contact) return false;
-    if (ct === 'none' && r.Contact) return false;
+    if (dup === 'no' && r.dup) return false;
+    if (dup === 'yes' && !r.dup) return false;
+    if (ct === 'email' && !(r.c && r.c.includes('@'))) return false;
+    if (ct === 'phone' && !(r.c && !r.c.includes('@') && /\d/.test(r.c))) return false;
+    if (ct==='has' && !r.c) return false;
+    if (ct==='none' && r.c) return false;
     return true;
   });
 
@@ -367,25 +368,25 @@ function createJobRow(r, dataIdx) {
   const isBookmarked = STATE.bookmarks.has(id);
   const q = _renderQ;
 
-  const subjects = (r['Subjects/Jobs'] || '').split('/').map(s => s.trim()).filter(Boolean).slice(0, 5);
-  const contactStr = r.Contact || '';
+  const subjects = r.s ? r.s.split('/').map(s => s.trim()).filter(Boolean).slice(0, 5) : [];
+  const contactStr = r.c || '';
 
   const row = document.createElement('div');
-  row.className = 'job-card' + (r.Duplicate ? ' is-duplicate' : '');
+  row.className = 'job-card' + (r.dup ? ' is-duplicate' : '');
   row.dataset.idx = dataIdx;
   row.dataset.id = id;
   row.dataset.contact = contactStr;
-  row.dataset.school = r['School Name'] || '';
+  row.dataset.school = r.n || '';
 
   // Build innerHTML as single string — fastest approach
   let html = '<div class="job-card-header"><div class="job-school"><button class="job-school-link">';
-  html += highlight(r['School Name'] || 'Unknown School', q);
+  html += highlight(r.n || 'Unknown', q);
   html += '</button></div>';
-  if (r.Duplicate) html += '<span class="dup-badge">DUP</span>';
+  if (r.dup) html += '<span class="dup-badge">DUP</span>';
   html += '</div>';
 
   html += '<div class="job-meta-row"><div class="job-area"><div class="job-area-dot"></div>';
-  html += highlight(r.Area || 'Unknown', q);
+  html += highlight(r.a || 'Unknown', q);
   html += '</div><div class="job-subjects">';
   if (subjects.length) {
     subjects.forEach(s => { html += '<span class="subject-tag">'; html += highlight(s, q); html += '</span>'; });
@@ -394,7 +395,7 @@ function createJobRow(r, dataIdx) {
 
   html += '<div class="job-right-meta"><div class="row-actions">';
   html += `<button class="star-btn${isBookmarked?' starred':''}" title="Save">${isBookmarked?'⭐':'☆'}</button>`;
-  html += `<span class="job-year">📅 ${r.Year || '—'}</span>`;
+  html += `<span class="job-year">📅 ${r.y || '—'}</span>`;
   html += '</div>';
   if (contactStr) {
     html += `<div class="job-contact-wrap"><button class="copy-contact-btn" title="Copy">📋</button>`;
@@ -466,27 +467,27 @@ function renderPagination(id, total, cur, onPage) {
 function openModal(r) {
   const body = document.getElementById('modalBody');
   const similar = document.getElementById('modalSimilar');
-  const subjects = (r['Subjects/Jobs'] || '—').split('/').map(s => `<span class="subject-tag">${escHtml(s.trim())}</span>`).join(' ');
+  const modalSubjects = r.s ? r.s.split('/').map(s => `<span class="subject-tag">${escHtml(s.trim())}</span>`).join(' ') : '—';
   body.innerHTML = `
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
-      <div class="modal-school" style="flex:1">${escHtml(r['School Name'] || 'Unknown')}</div>
-      ${r.Duplicate ? `<span class="dup-badge" style="margin-top:4px">Duplicate</span>` : ''}
+      <div class="modal-school" style="flex:1">${escHtml(r.n || 'Unknown School')}</div>
+      ${r.dup ? '<span class="dup-badge" style="margin-top:4px">Duplicate</span>' : ''}
     </div>
-    <div class="modal-row"><span class="modal-label">📍 Area</span><span>${escHtml(r.Area || '—')}</span></div>
-    <div class="modal-row"><span class="modal-label">📚 Subjects</span><div style="display:flex;flex-wrap:wrap;gap:5px">${subjects}</div></div>
-    <div class="modal-row"><span class="modal-label">📅 Year</span><span>${r.Year || '—'}</span></div>
-    <div class="modal-row"><span class="modal-label">🗓️ Date</span><span>${r.Date || '—'}</span></div>
-    ${r.Contact ? `<div class="modal-row"><span class="modal-label">📞 Contact</span>
-      <span style="word-break:break-all">${escHtml(r.Contact)}
-        <button onclick="navigator.clipboard.writeText('${escHtml(r.Contact)}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Copy</button>
+    <div class="modal-row"><span class="modal-label">📍 Area</span><span>${escHtml(r.a||'—')}</span></div>
+    <div class="modal-row"><span class="modal-label">📚 Subjects</span><div style="display:flex;flex-wrap:wrap;gap:5px">${modalSubjects}</div></div>
+    <div class="modal-row"><span class="modal-label">📅 Year</span><span>${r.y||'—'}</span></div>
+    <div class="modal-row"><span class="modal-label">🗓️ Date</span><span>${r.d||'—'}</span></div>
+    ${r.c ? `<div class="modal-row"><span class="modal-label">📞 Contact</span>
+      <span style="word-break:break-all">${escHtml(r.c)}
+        <button onclick="navigator.clipboard.writeText('${escHtml(r.c)}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Copy</button>
       </span></div>` : ''}
-    <div class="modal-row"><span class="modal-label">🔁 Duplicate</span><span>${r.Duplicate ? 'Yes' : 'No'}</span></div>
-    ${r['Raw Ad Text'] ? `<div class="modal-ad"><div class="modal-ad-label">📝 Original Ad</div>${escHtml(r['Raw Ad Text'])}</div>` : ''}
+    <div class="modal-row"><span class="modal-label">🔁 Duplicate</span><span>${r.dup ? 'Yes' : 'No'}</span></div>
+    ${r.rawAd ? `<div class="modal-ad"><div class="modal-ad-label">📝 Original Ad</div>${escHtml(r.rawAd)}</div>` : '<div style="font-size:12px;color:var(--text3);margin-top:12px">No original ad text available.</div>'}
   `;
 
   // Similar vacancies (same school OR same area, different record)
-  const schoolName = r['School Name'] || '';
-  const areaName = r.Area || '';
+  const sn = r.n || '';
+  const an = r.a || '';
   const similars = STATE.data.filter(d =>
     d !== r &&
     (d['School Name'] === schoolName || (d.Area === areaName && areaName && areaName !== '(Unknown)'))
@@ -511,13 +512,13 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 
 // ── School Profile Modal ──────────────────────────
 function openSchoolModal(name) {
-  if (!name || name === '(Unknown School)' || name === '(Unknown School - Arabic Ad)') return;
-  const records = STATE.data.filter(r => r['School Name'] === name);
-  const years = [...new Set(records.map(r => r.Year))].sort().join(', ');
+  if (!name || name.startsWith('(Unknown')) return;
+  const records = STATE.data.filter(r => r.n === name);
+  const yrs = [...new Set(records.map(r => r.y))].sort().join(', ');
   const body = document.getElementById('schoolBody');
   body.innerHTML = `
     <div class="school-modal-title">🏫 ${escHtml(name)}</div>
-    <div class="school-modal-meta">${records.length} postings · Years: ${years}</div>
+    <div class="school-modal-meta">${records.length} postings · Years: ${yrs}</div>
     <div class="jobs-grid" id="schoolJobsGrid"></div>
   `;
   const grid = document.getElementById('schoolJobsGrid');
@@ -621,22 +622,24 @@ function getExportData() {
 document.getElementById('exportExcel').addEventListener('click', () => {
   const data = getExportData();
   if (!data.length) return alert('No data to export on current page.');
-  const headers = ['School Name','Subjects/Jobs','Area','Contact','Year','Date','Duplicate','Raw Ad Text'];
+  const headers = ['School Name','Subjects/Jobs','Area','Contact','Year','Date','Duplicate'];
   const bom = '\uFEFF';
-  const rows = [headers.join(','), ...data.map(r => headers.map(h => `"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))];
+  const rows = [headers.join(','), ...data.map(r => [
+    r.n||'', r.s||'', r.a||'', r.c||'', r.y||'', r.d||'', r.dup?'Yes':'No'
+  ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))];
   dlFile(bom + rows.join('\n'), 'TeachyJobs_Export.csv', 'text/csv;charset=utf-8;');
 });
 document.getElementById('exportTxt').addEventListener('click', () => {
   const data = getExportData();
   if (!data.length) return alert('No data to export.');
   const lines = data.map((r,i) => [
-    `[${i+1}] ${r['School Name']||'Unknown'}`,
-    `    Area     : ${r.Area||'—'}`,
-    `    Subjects : ${r['Subjects/Jobs']||'—'}`,
-    `    Year     : ${r.Year||'—'}  |  Date: ${r.Date||'—'}`,
-    `    Contact  : ${r.Contact||'—'}`,
-    `    Duplicate: ${r.Duplicate?'Yes':'No'}`,
-    r['Raw Ad Text'] ? `    Ad Text  : ${String(r['Raw Ad Text']).substring(0,120)}…` : '',
+    `[${i+1}] ${r.n||'Unknown'}`,
+    `    Area     : ${r.a||'—'}`,
+    `    Subjects : ${r.s||'—'}`,
+    `    Year     : ${r.y||'—'}  |  Date: ${r.d||'—'}`,
+    `    Contact  : ${r.c||'—'}`,
+    `    Duplicate: ${r.dup?'Yes':'No'}`,
+    r.rawAd ? `    Ad Text  : ${String(r.rawAd).substring(0,120)}…` : '',
     ''
   ].filter(Boolean).join('\n')).join('\n');
   dlFile(`TeachyJobs Export\nTotal: ${data.length} records\nExported: ${new Date().toLocaleString()}\n${'─'.repeat(60)}\n\n${lines}`, 'TeachyJobs_Export.txt', 'text/plain;charset=utf-8;');
@@ -666,7 +669,7 @@ function buildCharts() {
 
   // Year bar — use live data from meta or count from records
   const yrRaw = (STATE.meta && STATE.meta.years) ? STATE.meta.years : 
-    STATE.data.reduce((acc,r)=>{ const y=String(r.Year||''); if(y) acc[y]=(acc[y]||0)+1; return acc; },{});
+    STATE.data.reduce((acc,r)=>{ const y=String(r.y||''); if(y) acc[y]=(acc[y]||0)+1; return acc; },{});
   const yrData = Object.fromEntries(Object.entries(yrRaw).sort());
   const barColors = ['#6366f1','#06b6d4','#a855f7','#ec4899','#f59e0b','#10b981','#f97316'];
   STATE.charts.year = new Chart(document.getElementById('chartYear'),{type:'bar',data:{
@@ -728,9 +731,9 @@ function buildQualityData() {
     datasets:[{label:'Missing',data:missing,backgroundColor:['#f59e0bcc','#f97316cc','#ef4444cc','#a855f7cc','#06b6d4cc'],borderColor:['#f59e0b','#f97316','#ef4444','#a855f7','#06b6d4'],borderWidth:2,borderRadius:6}]
   },options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:cc.text},grid:{color:cc.grid}},y:{ticks:{color:cc.text},grid:{color:cc.grid}}}}});
 
-  const withContact=STATE.data.filter(r=>r.Contact).length;
-  const withRaw=STATE.data.filter(r=>r['Raw Ad Text']).length;
-  const unknown=STATE.data.filter(r=>!r.Area||r.Area==='(Unknown)').length;
+  const withContact=STATE.data.filter(r=>r.c).length;
+  const withRaw=STATE.data.filter(r=>r.rawAd).length;
+  const unknown=STATE.data.filter(r=>!r.a||r.a==='(Unknown)').length;
   document.getElementById('unknownCount').textContent = unknown.toLocaleString();
   document.getElementById('namedCount').textContent = (total-unknown).toLocaleString();
   document.getElementById('contactCount').textContent = withContact.toLocaleString();
