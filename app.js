@@ -199,10 +199,8 @@ function setupGridDelegation() {
       if (e.target.closest('.copy-contact-btn')) {
         e.stopPropagation();
         const btn = e.target.closest('.copy-contact-btn');
-        navigator.clipboard.writeText(row.dataset.contact || '').then(() => {
-          btn.textContent = '✓'; btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1500);
-        });
+        const text = row.dataset.contact || '';
+        copyToClipboard(text, btn);
         return;
       }
       if (e.target.closest('.job-school-link')) {
@@ -460,7 +458,7 @@ function openModal(r) {
     '<div class="modal-row"><span class="modal-label">🗓️ Date</span><span>' + (r.Date || '—') + '</span></div>' +
     (r.Contact ? '<div class="modal-row"><span class="modal-label">📞 Contact</span><span style="word-break:break-all">' +
       escHtml(r.Contact) +
-      ' <button onclick="navigator.clipboard.writeText(\'' + escHtml(r.Contact) + '\');this.textContent=\'✓ Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface-solid);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Copy</button></span></div>' : '') +
+      ' <button onclick="copyToClipboard_inline(\'' + escHtml(r.Contact) + '\');this.textContent=\'✓ Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface-solid);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Copy</button></span></div>' : '') +
     '<div class="modal-row"><span class="modal-label">🔁 Duplicate</span><span>' + (r.Duplicate ? 'Yes' : 'No') + '</span></div>' +
     (r['Raw Ad Text'] ? '<div class="modal-ad"><div class="modal-ad-label">📝 Original Ad</div>' + escHtml(r['Raw Ad Text']) + '</div>' : '');
 
@@ -768,6 +766,32 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Helpers ───────────────────────────────────────
+// Robust clipboard — works on HTTP, mobile, iOS Safari
+function copyToClipboard(text, btn) {
+  const succeed = () => {
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig.includes('✓') ? '📋' : orig; btn.classList.remove('copied'); }, 1500);
+  };
+  const fallback = () => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;font-size:16px';
+    document.body.appendChild(el);
+    el.focus(); el.select();
+    try { document.execCommand('copy'); succeed(); }
+    catch (_) { alert('Contact: ' + text); }
+    document.body.removeChild(el);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(succeed).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
