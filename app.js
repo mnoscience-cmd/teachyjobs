@@ -30,14 +30,20 @@ document.getElementById('themeToggle').addEventListener('click', () =>
 function setLang(lang) {
   STATE.lang = lang;
   const isAr = lang === 'ar';
+  // Apply dir to body only — NOT html — so brand elements with dir="ltr" are respected
   document.documentElement.setAttribute('lang', lang);
-  document.documentElement.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+  document.body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+  document.documentElement.removeAttribute('dir'); // clear any previous html dir
   document.getElementById('langLabel').textContent = isAr ? 'EN' : 'AR';
   document.getElementById('searchInput').placeholder = isAr
     ? 'ابحث بالمدرسة أو المادة أو المنطقة...'
     : 'Search school, subject, area, contact...';
   document.querySelectorAll('[data-en]').forEach(el => {
     el.textContent = el.getAttribute('data-' + lang) || el.getAttribute('data-en');
+  });
+  // Force brand elements to always stay LTR
+  document.querySelectorAll('.hero-title, .logo-text, .inst-title').forEach(el => {
+    el.setAttribute('dir', 'ltr');
   });
 }
 document.getElementById('langToggle').addEventListener('click', () =>
@@ -458,9 +464,18 @@ function openModal(r) {
     '<div class="modal-row"><span class="modal-label">🗓️ Date</span><span>' + (r.Date || '—') + '</span></div>' +
     (r.Contact ? '<div class="modal-row"><span class="modal-label">📞 Contact</span><span style="word-break:break-all">' +
       escHtml(r.Contact) +
-      ' <button onclick="copyToClipboard_inline(\'' + escHtml(r.Contact) + '\');this.textContent=\'✓ Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface-solid);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Copy</button></span></div>' : '') +
+      ' <button class="modal-copy-btn" data-copy="' + escHtml(r.Contact) + '" style="margin-left:8px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface-solid);color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;touch-action:manipulation">Copy</button></span></div>' : '') +
     '<div class="modal-row"><span class="modal-label">🔁 Duplicate</span><span>' + (r.Duplicate ? 'Yes' : 'No') + '</span></div>' +
     (r['Raw Ad Text'] ? '<div class="modal-ad"><div class="modal-ad-label">📝 Original Ad</div>' + escHtml(r['Raw Ad Text']) + '</div>' : '');
+
+  // Attach copy button event (safe, works on all browsers/mobile)
+  const copyBtn = body.querySelector('.modal-copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      copyToClipboard(this.dataset.copy, this);
+      setTimeout(() => { this.textContent = 'Copy'; }, 1600);
+    });
+  }
 
   // Similar vacancies
   const sn = r['School Name'] || '';

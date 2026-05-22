@@ -47,7 +47,7 @@ html{scroll-behavior:smooth}
 }
 
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .4s,color .4s}
-[dir="rtl"] body{font-family:'Noto Kufi Arabic',sans-serif}
+[dir="rtl"] body,[dir="rtl"]{font-family:'Noto Kufi Arabic',sans-serif}
 
 /* BG */
 .bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg);transition:background .4s}
@@ -295,13 +295,13 @@ kbd{display:inline-block;padding:1px 6px;border-radius:4px;background:var(--kbd-
 .back-to-top:hover{background:var(--grad1);color:white;border-color:transparent}
 
 /* RTL */
-[dir="rtl"] .search-icon{left:auto;right:14px}
-[dir="rtl"] .search-input{padding:13px 44px 13px 90px}
-[dir="rtl"] .kbd-hint{right:auto;left:12px}
-[dir="rtl"] .modal-close{float:left}
-[dir="rtl"] .inst-section li{padding-left:0;padding-right:10px}
-[dir="rtl"] .inst-section li::before{left:auto;right:0}
-[dir="rtl"] .logo-text{font-family:'Plus Jakarta Sans',sans-serif}
+body[dir="rtl"] .search-icon{left:auto;right:14px}
+body[dir="rtl"] .search-input{padding:13px 44px 13px 90px}
+body[dir="rtl"] .kbd-hint{right:auto;left:12px}
+body[dir="rtl"] .modal-close{float:left}
+body[dir="rtl"] .inst-section li{padding-left:0;padding-right:10px}
+bodybody[dir="rtl"] .inst-section li::before{left:auto;right:0}
+body[dir="rtl"] .logo-text{font-family:'Plus Jakarta Sans',sans-serif}
 
 /* RESPONSIVE */
 @media(max-width:960px){
@@ -356,10 +356,11 @@ kbd{display:inline-block;padding:1px 6px;border-radius:4px;background:var(--kbd-
 /* Reduce paint area on scroll */
 .bg-canvas { transform: translateZ(0); }
 
-/* Force brand name LTR — never flip in Arabic mode */
+/* Brand elements always LTR regardless of language */
 .hero-title,
 .logo-text,
-.inst-title { direction: ltr !important; unicode-bidi: isolate !important; }
+.inst-title,
+.hero-sub { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
 
 /* Mobile copy button — bigger tap target */
 .copy-contact-btn { min-width: 28px; min-height: 28px; touch-action: manipulation; }
